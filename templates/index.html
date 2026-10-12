@@ -12,13 +12,15 @@
                     <i class="bi bi-patch-check-fill me-1"></i> Continuous Learning Architecture
                 </span>
                 <h1 class="display-4 fw-bold text-white mb-3">
-                    Empowering Future Engineers with Real-World Knowledge
+                    Empowering Future Engineers with Real Knowledge
                 </h1>
                 <p class="lead text-light mb-4" style="opacity: 0.9;">
-                    Access structured university courses, hands-on tutorials, and guided curriculums in DevOps, Cloud Engineering, Full-Stack Development, and Cybersecurity.
+                    Access structured university courses, hands-on tutorials, and guided curriculums in DevOps, Cloud
+                    Engineering, Full-Stack Development, and Cybersecurity.
                 </p>
                 <div class="d-flex flex-wrap gap-3">
-                    <a href="{{ url_for('courses.list_courses') }}" class="btn btn-light btn-lg text-primary fw-bold px-4 py-3 shadow-sm">
+                    <a href="{{ url_for('courses.list_courses') }}"
+                        class="btn btn-light btn-lg text-primary fw-bold px-4 py-3 shadow-sm">
                         <i class="bi bi-search me-2"></i> Explore Courses
                     </a>
                     {% if not session.get('user_id') %}
@@ -26,7 +28,8 @@
                         <i class="bi bi-person-plus me-2"></i> Join as Student
                     </a>
                     {% else %}
-                    <a href="{{ url_for('student.dashboard' if session.get('user_role') == 'student' else 'admin.dashboard') }}" class="btn btn-outline-light btn-lg fw-semibold px-4 py-3">
+                    <a href="{{ url_for('student.dashboard' if session.get('user_role') == 'student' else 'admin.dashboard') }}"
+                        class="btn btn-outline-light btn-lg fw-semibold px-4 py-3">
                         <i class="bi bi-speedometer2 me-2"></i> Go to Dashboard
                     </a>
                     {% endif %}
@@ -37,7 +40,8 @@
                     <h5 class="fw-bold text-primary mb-3"><i class="bi bi-search me-2"></i>Quick Course Lookup</h5>
                     <form action="{{ url_for('courses.list_courses') }}" method="GET" class="mb-3">
                         <div class="input-group mb-3">
-                            <input type="text" name="q" class="form-control" placeholder="Search Python, DevOps, Docker...">
+                            <input type="text" name="q" class="form-control"
+                                placeholder="Search Python, DevOps, Docker...">
                             <button class="btn btn-primary" type="submit">
                                 <i class="bi bi-arrow-right"></i>
                             </button>
@@ -74,7 +78,8 @@
                     </div>
                     <h5 class="fw-bold mb-2">Curated Industry Curriculum</h5>
                     <p class="text-muted small mb-0">
-                        Modular units covering cloud engineering, CI/CD pipelines, containerization, full-stack web systems, and data pipelines.
+                        Modular units covering cloud engineering, CI/CD pipelines, containerization, full-stack web
+                        systems, and data pipelines.
                     </p>
                 </div>
             </div>
@@ -85,7 +90,8 @@
                     </div>
                     <h5 class="fw-bold mb-2">Trackable Lesson Progress</h5>
                     <p class="text-muted small mb-0">
-                        Never lose your spot. Complete lessons sequentially, mark off milestones, and monitor real-time completion percentages.
+                        Never lose your spot. Complete lessons sequentially, mark off milestones, and monitor real-time
+                        completion percentages.
                     </p>
                 </div>
             </div>
@@ -96,7 +102,8 @@
                     </div>
                     <h5 class="fw-bold mb-2">Enterprise Security & RBAC</h5>
                     <p class="text-muted small mb-0">
-                        Strict server-side role separation between students and administrative educators, backed by hashed credentials and CSRF protection.
+                        Strict server-side role separation between students and administrative educators, backed by
+                        hashed credentials and CSRF protection.
                     </p>
                 </div>
             </div>
@@ -119,43 +126,45 @@
 
         <div class="row g-4">
             {% if featured_courses %}
-                {% for course in featured_courses %}
-                <div class="col-md-4">
-                    <div class="card h-100">
-                        <div class="card-course-header"></div>
-                        <div class="card-body d-flex flex-column p-4">
-                            <div class="d-flex justify-content-between align-items-center mb-3">
-                                <span class="badge-category">{{ course.category }}</span>
-                                <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ course.duration }}</span>
+            {% for course in featured_courses %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-course-header"></div>
+                    <div class="card-body d-flex flex-column p-4">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <span class="badge-category">{{ course.category }}</span>
+                            <span class="text-muted small"><i class="bi bi-clock me-1"></i>{{ course.duration }}</span>
+                        </div>
+                        <h5 class="card-title fw-bold text-dark mb-2">
+                            <a href="{{ url_for('courses.course_details', course_id=course.id) }}"
+                                class="text-decoration-none text-dark">
+                                {{ course.title }}
+                            </a>
+                        </h5>
+                        <p class="text-muted small flex-grow-1">
+                            {{ course.description[:130] }}{% if course.description|length > 130 %}...{% endif %}
+                        </p>
+                        <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Instructor</small>
+                                <span class="small fw-semibold text-dark">{{ course.instructor }}</span>
                             </div>
-                            <h5 class="card-title fw-bold text-dark mb-2">
-                                <a href="{{ url_for('courses.course_details', course_id=course.id) }}" class="text-decoration-none text-dark">
-                                    {{ course.title }}
-                                </a>
-                            </h5>
-                            <p class="text-muted small flex-grow-1">
-                                {{ course.description[:130] }}{% if course.description|length > 130 %}...{% endif %}
-                            </p>
-                            <div class="border-top pt-3 mt-3 d-flex justify-content-between align-items-center">
-                                <div>
-                                    <small class="text-muted d-block">Instructor</small>
-                                    <span class="small fw-semibold text-dark">{{ course.instructor }}</span>
-                                </div>
-                                <a href="{{ url_for('courses.course_details', course_id=course.id) }}" class="btn btn-sm btn-primary">
-                                    View Course
-                                </a>
-                            </div>
+                            <a href="{{ url_for('courses.course_details', course_id=course.id) }}"
+                                class="btn btn-sm btn-primary">
+                                View Course
+                            </a>
                         </div>
                     </div>
                 </div>
-                {% endfor %}
+            </div>
+            {% endfor %}
             {% else %}
-                <div class="col-12">
-                    <div class="alert alert-info text-center py-4">
-                        <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
-                        No featured courses available yet. Visit back soon!
-                    </div>
+            <div class="col-12">
+                <div class="alert alert-info text-center py-4">
+                    <i class="bi bi-info-circle fs-3 d-block mb-2"></i>
+                    No featured courses available yet. Visit back soon!
                 </div>
+            </div>
             {% endif %}
         </div>
     </div>
