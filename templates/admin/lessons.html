@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Lessons: {{ course.title }} | Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-heading">Management Console</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Admin Dashboard
+            </a>
+            <a class="nav-link active" href="{{ url_for('admin.list_courses') }}">
+                <i class="bi bi-collection"></i> Manage Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_students') }}">
+                <i class="bi bi-people"></i> Registered Students
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_enrollments') }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Enrollment Reports
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-1">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_courses') }}">Courses</a></li>
+                        <li class="breadcrumb-item active">Lessons</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold text-dark mb-0">Curriculum: {{ course.title }}</h2>
+                <p class="text-muted small mb-0"><span class="badge-category">{{ course.category }}</span> &bull; {{ lessons|length }} Total Lessons</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('courses.course_details', course_id=course.id) }}" target="_blank" class="btn btn-outline-primary">
+                    <i class="bi bi-eye me-1"></i> Preview as Student
+                </a>
+                <a href="{{ url_for('admin.list_courses') }}" class="btn btn-outline-secondary">
+                    Back to Courses
+                </a>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Left: Add/Edit Lesson Form -->
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm p-4 bg-white sticky-top" style="top: 80px;">
+                    <h5 class="fw-bold text-dark mb-3">
+                        <i class="bi {% if editing_lesson %}bi-pencil-square{% else %}bi-plus-circle{% endif %} me-2 text-primary"></i>
+                        {{ "Edit Lesson #" ~ editing_lesson.lesson_order if editing_lesson else "Add New Lesson" }}
+                    </h5>
+
+                    <form method="POST" action="{{ url_for('admin.edit_lesson', course_id=course.id, lesson_id=editing_lesson.id) if editing_lesson else url_for('admin.manage_lessons', course_id=course.id) }}">
+                        {{ form.hidden_tag() }}
+
+                        <div class="row g-2 mb-3">
+                            <div class="col-4">
+                                <label for="{{ form.lesson_order.id }}" class="form-label small fw-semibold">Order #</label>
+                                {{ form.lesson_order(class="form-control" + (" is-invalid" if form.lesson_order.errors else "")) }}
+                                {% for err in form.lesson_order.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                            </div>
+                            <div class="col-8">
+                                <label for="{{ form.title.id }}" class="form-label small fw-semibold">Lesson Title</label>
+                                {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Introduction to Jenkins") }}
+                                {% for err in form.title.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.content.id }}" class="form-label small fw-semibold">Lesson Text Material</label>
+                            {{ form.content(class="form-control" + (" is-invalid" if form.content.errors else ""), rows=6, placeholder="Enter reading material and technical instructions...") }}
+                            {% for err in form.content.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ form.resource_url.id }}" class="form-label small fw-semibold">External Resource Link (Optional)</label>
+                            {{ form.resource_url(class="form-control" + (" is-invalid" if form.resource_url.errors else ""), placeholder="https://docs.docker.com/...") }}
+                            {% for err in form.resource_url.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-save me-1"></i> {{ "Update Lesson" if editing_lesson else "Add Lesson" }}
+                            </button>
+                            {% if editing_lesson %}
+                            <a href="{{ url_for('admin.manage_lessons', course_id=course.id) }}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Right: List of Existing Lessons -->
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-list-nested me-2 text-primary"></i>Current Lesson Sequence</h5>
+
+                    {% if lessons %}
+                    <div class="list-group list-group-flush">
+                        {% for l in lessons %}
+                        <div class="list-group-item p-3 d-flex justify-content-between align-items-center {% if editing_lesson and editing_lesson.id == l.id %}bg-light border-primary{% endif %}">
+                            <div class="d-flex align-items-start gap-3">
+                                <span class="badge bg-primary rounded-pill mt-1">#{{ l.lesson_order }}</span>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-1">{{ l.title }}</h6>
+                                    <p class="text-muted small mb-1">{{ l.content[:100] }}{% if l.content|length > 100 %}...{% endif %}</p>
+                                    {% if l.resource_url %}
+                                    <a href="{{ l.resource_url }}" target="_blank" class="small text-decoration-none">
+                                        <i class="bi bi-link-45deg"></i> Link Attached
+                                    </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="d-flex gap-1">
+                                <a href="{{ url_for('admin.edit_lesson', course_id=course.id, lesson_id=l.id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="POST" action="{{ url_for('admin.delete_lesson', course_id=course.id, lesson_id=l.id) }}" onsubmit="return confirm('Delete lesson \'{{ l.title }}\'?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-journal-plus fs-2 text-muted d-block mb-2"></i>
+                        <p class="text-muted mb-0">No lessons added yet. Use the form on the left to add unit 1.</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

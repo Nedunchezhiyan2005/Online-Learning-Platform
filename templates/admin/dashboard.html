@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+{% block title %}Administrator Dashboard | Centralized Online Learning Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="d-flex align-items-center gap-3 mb-4 px-2">
+            <div class="stat-icon stat-blue">
+                <i class="bi bi-shield-check fs-3"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">{{ session.get('user_name') }}</h6>
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle small">Administrator</span>
+            </div>
+        </div>
+
+        <div class="sidebar-heading">Management Console</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link active" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Admin Dashboard
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_courses') }}">
+                <i class="bi bi-collection"></i> Manage Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.create_course') }}">
+                <i class="bi bi-plus-square"></i> Create New Course
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_students') }}">
+                <i class="bi bi-people"></i> Registered Students
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_enrollments') }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Enrollment Reports
+            </a>
+        </nav>
+
+        <div class="sidebar-heading">Quick Actions</div>
+        <nav class="nav flex-column sidebar-nav">
+            <a class="nav-link" href="{{ url_for('courses.list_courses') }}" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i> View Live Catalog
+            </a>
+            <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">Administrative Overview</h2>
+                <p class="text-muted mb-0">Live platform metrics, student activity, and course enrollment reports.</p>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('admin.create_course') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Add New Course
+                </a>
+                <a href="{{ url_for('admin.list_enrollments') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-download me-1"></i> View Reports
+                </a>
+            </div>
+        </div>
+
+        <!-- 4 Metric Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-blue">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Registered Students</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ total_students }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-green">
+                        <i class="bi bi-journal-richtext"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Total Courses</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ total_courses }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-purple">
+                        <i class="bi bi-bookmark-check-fill"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Total Enrollments</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ total_enrollments }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-yellow">
+                        <i class="bi bi-card-checklist"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Total Lessons</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ total_lessons }}</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Visual Analytics (Chart.js) -->
+        <div class="row g-4 mb-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart me-2 text-primary"></i>Course Category Distribution</h5>
+                    <div>
+                        <canvas id="categoryChart" style="max-height: 260px;"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-pie-chart-fill me-2 text-primary"></i>Enrollment Progress Breakdown</h5>
+                    <div>
+                        <canvas id="statusChart" style="max-height: 260px;"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2 Column Overview: Popular Courses & Recent Students -->
+        <div class="row g-4">
+            <!-- Most Popular Courses -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-trophy me-2 text-warning"></i>Most Popular Courses</h5>
+                        <a href="{{ url_for('admin.list_courses') }}" class="btn btn-sm btn-outline-primary">Manage All</a>
+                    </div>
+                    {% if popular_courses %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Course</th>
+                                    <th>Category</th>
+                                    <th class="text-end">Enrollments</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in popular_courses %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ url_for('admin.edit_course', course_id=item[0].id) }}" class="fw-semibold text-dark text-decoration-none">
+                                            {{ item[0].title }}
+                                        </a>
+                                        <small class="text-muted d-block">{{ item[0].instructor }}</small>
+                                    </td>
+                                    <td><span class="badge-category">{{ item[0].category }}</span></td>
+                                    <td class="text-end fw-bold text-primary">{{ item[1] }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small mb-0">No course data recorded.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Student Registrations -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 h-100 bg-white">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-dark mb-0"><i class="bi bi-person-check me-2 text-success"></i>Recent Registrations</h5>
+                        <a href="{{ url_for('admin.list_students') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                    </div>
+                    {% if recent_students %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Student</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Joined</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for st in recent_students %}
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold text-dark">{{ st.full_name }}</div>
+                                        <small class="text-muted">{{ st.email }}</small>
+                                    </td>
+                                    <td>
+                                        {% if st.is_active %}
+                                        <span class="badge bg-success-subtle text-success border border-success-subtle">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end text-muted small">{{ st.created_at.strftime('%b %d, %Y') }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <p class="text-muted small mb-0">No registered students yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Categories Bar Chart
+    const catCtx = document.getElementById('categoryChart');
+    if (catCtx) {
+        new Chart(catCtx, {
+            type: 'bar',
+            data: {
+                labels: {{ categories_labels|tojson }},
+                datasets: [{
+                    label: 'Courses in Category',
+                    data: {{ categories_data|tojson }},
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
+    }
+
+    // Status Doughnut Chart
+    const statusCtx = document.getElementById('statusChart');
+    if (statusCtx) {
+        new Chart(statusCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ status_labels|tojson }},
+                datasets: [{
+                    data: {{ status_data|tojson }},
+                    backgroundColor: ['#f59e0b', '#10b981', '#6366f1']
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

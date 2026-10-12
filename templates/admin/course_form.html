@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} | Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-heading">Management Console</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Admin Dashboard
+            </a>
+            <a class="nav-link active" href="{{ url_for('admin.list_courses') }}">
+                <i class="bi bi-collection"></i> Manage Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_students') }}">
+                <i class="bi bi-people"></i> Registered Students
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_enrollments') }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Enrollment Reports
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb small mb-1">
+                        <li class="breadcrumb-item"><a href="{{ url_for('admin.list_courses') }}">Courses</a></li>
+                        <li class="breadcrumb-item active">{{ "Edit Course" if course else "New Course" }}</li>
+                    </ol>
+                </nav>
+                <h2 class="fw-bold text-dark mb-0">{{ title }}</h2>
+            </div>
+            <a href="{{ url_for('admin.list_courses') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Back to Courses
+            </a>
+        </div>
+
+        <div class="card border-0 shadow-sm p-4 p-md-5 bg-white">
+            <form method="POST">
+                {{ form.hidden_tag() }}
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-8">
+                        <label for="{{ form.title.id }}" class="form-label fw-semibold small">Course Title</label>
+                        {{ form.title(class="form-control" + (" is-invalid" if form.title.errors else ""), placeholder="e.g. Container Orchestration with Docker & Kubernetes") }}
+                        {% for err in form.title.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.category.id }}" class="form-label fw-semibold small">Category</label>
+                        {{ form.category(class="form-select" + (" is-invalid" if form.category.errors else "")) }}
+                        {% for err in form.category.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.instructor.id }}" class="form-label fw-semibold small">Instructor Name</label>
+                        {{ form.instructor(class="form-control" + (" is-invalid" if form.instructor.errors else ""), placeholder="e.g. Dr. John Watson") }}
+                        {% for err in form.instructor.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.duration.id }}" class="form-label fw-semibold small">Estimated Duration</label>
+                        {{ form.duration(class="form-control" + (" is-invalid" if form.duration.errors else ""), placeholder="e.g. 8 Weeks (35 Hours)") }}
+                        {% for err in form.duration.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.description.id }}" class="form-label fw-semibold small">Course Description & Overview</label>
+                    {{ form.description(class="form-control" + (" is-invalid" if form.description.errors else ""), rows=4, placeholder="Provide a thorough syllabus summary and prerequisites...") }}
+                    {% for err in form.description.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                </div>
+
+                <div class="mb-3">
+                    <label for="{{ form.learning_objectives.id }}" class="form-label fw-semibold small">Learning Objectives (Enter one objective per line)</label>
+                    {{ form.learning_objectives(class="form-control" + (" is-invalid" if form.learning_objectives.errors else ""), rows=4, placeholder="- Master Docker image building\n- Configure multi-container orchestration\n- Implement CI/CD deployment pipelines") }}
+                    {% for err in form.learning_objectives.errors %}<div class="invalid-feedback">{{ err }}</div>{% endfor %}
+                </div>
+
+                <div class="form-check form-switch mb-4">
+                    {{ form.is_published(class="form-check-input") }}
+                    <label class="form-check-label fw-semibold" for="{{ form.is_published.id }}">
+                        Publish course immediately (Visible in student catalog)
+                    </label>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary px-4">
+                        <i class="bi bi-save me-1"></i> Save Course
+                    </button>
+                    <a href="{{ url_for('admin.list_courses') }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

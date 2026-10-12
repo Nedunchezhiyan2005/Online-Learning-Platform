@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Enrollment Reports | Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-heading">Management Console</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Admin Dashboard
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_courses') }}">
+                <i class="bi bi-collection"></i> Manage Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_students') }}">
+                <i class="bi bi-people"></i> Registered Students
+            </a>
+            <a class="nav-link active" href="{{ url_for('admin.list_enrollments') }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Enrollment Reports
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">Platform Enrollment Reports</h2>
+                <p class="text-muted mb-0">Audit student course registrations, completion statuses, and individual progress.</p>
+            </div>
+            <span class="badge bg-primary fs-6 p-2 px-3">
+                {{ enrollment_reports|length }} Total Records
+            </span>
+        </div>
+
+        <!-- Filter Controls -->
+        <div class="card border-0 shadow-sm p-3 mb-4 bg-white">
+            <form action="{{ url_for('admin.list_enrollments') }}" method="GET" class="row g-2 align-items-center">
+                <div class="col-md-5">
+                    <label class="form-label small fw-semibold text-muted mb-1">Filter by Course</label>
+                    <select name="course_id" class="form-select">
+                        <option value="">All Courses</option>
+                        {% for c in courses %}
+                        <option value="{{ c.id }}" {% if selected_course_id == c.id %}selected{% endif %}>{{ c.title }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label small fw-semibold text-muted mb-1">Filter by Status</label>
+                    <select name="status" class="form-select">
+                        <option value="">All Completion Statuses</option>
+                        <option value="in_progress" {% if selected_status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                        <option value="completed" {% if selected_status == 'completed' %}selected{% endif %}>Completed (100%)</option>
+                    </select>
+                </div>
+                <div class="col-md-3 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-filter me-1"></i> Apply Filter
+                    </button>
+                    {% if selected_course_id or selected_status %}
+                    <a href="{{ url_for('admin.list_enrollments') }}" class="btn btn-outline-secondary" title="Reset Filters">
+                        <i class="bi bi-x-circle"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Enrollments Table -->
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            {% if enrollment_reports %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student</th>
+                            <th>Course</th>
+                            <th>Enrolled Date</th>
+                            <th>Lesson Units Completed</th>
+                            <th>Progress %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in enrollment_reports %}
+                        <tr>
+                            <td>
+                                <div class="fw-semibold text-dark">{{ r.student_name }}</div>
+                                <small class="text-muted">{{ r.student_email }}</small>
+                            </td>
+                            <td>
+                                <span class="fw-semibold text-dark">{{ r.course_title }}</span>
+                            </td>
+                            <td class="text-muted small">
+                                {{ r.enrolled_at.strftime('%b %d, %Y') }}
+                            </td>
+                            <td>
+                                <span class="fw-bold">{{ r.completed_lessons }}</span> / {{ r.total_lessons }} Lessons
+                            </td>
+                            <td style="min-width: 130px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                        <div class="progress-bar {% if r.progress_percent == 100 %}bg-success{% endif %}" role="progressbar" style="width: {{ r.progress_percent }}%;"></div>
+                                    </div>
+                                    <span class="small fw-semibold text-muted">{{ r.progress_percent }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if r.status == 'completed' or r.progress_percent == 100 %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="bi bi-check2-circle me-1"></i> Completed
+                                </span>
+                                {% else %}
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                    <i class="bi bi-hourglass-split me-1"></i> In Progress
+                                </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-file-earmark-x fs-1 text-muted d-block mb-3"></i>
+                <h5 class="fw-bold">No enrollment records found</h5>
+                <p class="text-muted small">There are no records matching your current filter criteria.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

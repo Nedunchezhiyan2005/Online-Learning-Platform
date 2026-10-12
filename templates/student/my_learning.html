@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}My Learning | Centralized Online Learning Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-heading">Learning Menu</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link" href="{{ url_for('student.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard Overview
+            </a>
+            <a class="nav-link active" href="{{ url_for('student.my_learning') }}">
+                <i class="bi bi-journal-bookmark"></i> My Enrolled Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('courses.list_courses') }}">
+                <i class="bi bi-compass"></i> Explore Course Catalog
+            </a>
+        </nav>
+
+        <div class="sidebar-heading">Account</div>
+        <nav class="nav flex-column sidebar-nav">
+            <a class="nav-link" href="{{ url_for('student.profile') }}">
+                <i class="bi bi-person-gear"></i> Profile & Security
+            </a>
+            <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">My Learning Portal</h2>
+                <p class="text-muted mb-0">Continue your active courses and track lesson completions.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('courses.list_courses') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Enroll in New Course
+                </a>
+            </div>
+        </div>
+
+        {% if learning_data %}
+        <div class="row g-4">
+            {% for item in learning_data %}
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 shadow-sm border-0 d-flex flex-column">
+                    <div class="card-course-header"></div>
+                    <div class="card-body p-4 d-flex flex-column">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge-category">{{ item.course.category }}</span>
+                            {% if item.progress_percent == 100 %}
+                                <span class="badge bg-success"><i class="bi bi-check-circle-fill me-1"></i>Completed</span>
+                            {% else %}
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">In Progress</span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold text-dark mb-2">
+                            <a href="{{ url_for('courses.course_details', course_id=item.course.id) }}" class="text-decoration-none text-dark">
+                                {{ item.course.title }}
+                            </a>
+                        </h5>
+
+                        <p class="text-muted small mb-3">
+                            <i class="bi bi-person me-1"></i> {{ item.course.instructor }}
+                        </p>
+
+                        <!-- Progress Bar Section -->
+                        <div class="mt-auto pt-3 border-top">
+                            <div class="d-flex justify-content-between align-items-center mb-1 small">
+                                <span class="text-muted">Progress</span>
+                                <span class="fw-bold {% if item.progress_percent == 100 %}text-success{% else %}text-primary{% endif %}">
+                                    {{ item.progress_percent }}% ({{ item.completed_lessons }}/{{ item.total_lessons }})
+                                </span>
+                            </div>
+                            <div class="progress mb-3">
+                                <div class="progress-bar {% if item.progress_percent == 100 %}bg-success{% endif %}" role="progressbar" style="width: {{ item.progress_percent }}%;" aria-valuenow="{{ item.progress_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+
+                            <div class="d-flex justify-content-between align-items-center small text-muted mb-3">
+                                <span>Enrolled: {{ item.enrollment.enrolled_at.strftime('%b %d, %Y') }}</span>
+                            </div>
+
+                            {% if item.progress_percent == 100 %}
+                                <a href="{{ url_for('student.view_certificate', enrollment_id=item.enrollment.id) }}" class="btn btn-success w-100 mb-2">
+                                    <i class="bi bi-award-fill me-1"></i> View Certificate
+                                </a>
+                                <div class="d-flex gap-2">
+                                    <a href="{{ url_for('student.download_certificate', enrollment_id=item.enrollment.id) }}" class="btn btn-outline-success btn-sm w-50" title="Download Certificate">
+                                        <i class="bi bi-download me-1"></i> Download
+                                    </a>
+                                    <a href="{{ url_for('courses.course_details', course_id=item.course.id) }}" class="btn btn-outline-secondary btn-sm w-50">
+                                        Review
+                                    </a>
+                                </div>
+                            {% elif item.next_lesson_id %}
+                                <a href="{{ url_for('student.view_lesson', course_id=item.course.id, lesson_id=item.next_lesson_id) }}" class="btn btn-primary w-100">
+                                    <i class="bi bi-play-circle me-1"></i> Continue Learning
+                                </a>
+                            {% else %}
+                                <a href="{{ url_for('courses.course_details', course_id=item.course.id) }}" class="btn btn-outline-secondary w-100">
+                                    Review Course
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="card border-0 shadow-sm p-5 text-center bg-white">
+            <div class="stat-icon stat-blue mx-auto mb-3">
+                <i class="bi bi-journal-album fs-3"></i>
+            </div>
+            <h4 class="fw-bold text-dark">You haven't enrolled in any courses yet</h4>
+            <p class="text-muted mb-4">Choose from our available tracks in DevOps, Web Development, and Cybersecurity.</p>
+            <div>
+                <a href="{{ url_for('courses.list_courses') }}" class="btn btn-primary btn-lg">
+                    <i class="bi bi-search me-2"></i> Browse Courses Catalog
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

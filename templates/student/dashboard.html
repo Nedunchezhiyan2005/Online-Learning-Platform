@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard | Centralized Online Learning Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="d-flex align-items-center gap-3 mb-4 px-2">
+            <div class="stat-icon stat-blue">
+                <i class="bi bi-person-circle fs-3"></i>
+            </div>
+            <div>
+                <h6 class="fw-bold mb-0 text-dark">{{ user.full_name }}</h6>
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle small">Student</span>
+            </div>
+        </div>
+
+        <div class="sidebar-heading">Learning Menu</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link active" href="{{ url_for('student.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard Overview
+            </a>
+            <a class="nav-link" href="{{ url_for('student.my_learning') }}">
+                <i class="bi bi-journal-bookmark"></i> My Enrolled Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('courses.list_courses') }}">
+                <i class="bi bi-compass"></i> Explore Course Catalog
+            </a>
+        </nav>
+
+        <div class="sidebar-heading">Account</div>
+        <nav class="nav flex-column sidebar-nav">
+            <a class="nav-link" href="{{ url_for('student.profile') }}">
+                <i class="bi bi-person-gear"></i> Profile & Security
+            </a>
+            <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">Welcome back, {{ user.full_name }}! 👋</h2>
+                <p class="text-muted mb-0">Track your courses, pick up where you left off, and explore new learning tracks.</p>
+            </div>
+            <div>
+                <a href="{{ url_for('courses.list_courses') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle me-1"></i> Browse More Courses
+                </a>
+            </div>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="row g-3 mb-4">
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-blue">
+                        <i class="bi bi-book-half"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Enrolled Courses</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ total_enrolled }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-yellow">
+                        <i class="bi bi-hourglass-split"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">In Progress</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ in_progress_count }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-green">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Completed</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ completed_count }}</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 col-xl-3">
+                <div class="stat-card d-flex align-items-center gap-3">
+                    <div class="stat-icon stat-purple">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Average Progress</span>
+                        <h3 class="fw-bold text-dark mb-0">{{ overall_progress }}%</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recently Enrolled Courses Table / Progress Cards -->
+        <div class="card border-0 shadow-sm p-4 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2 text-primary"></i>Recently Active Courses</h5>
+                <a href="{{ url_for('student.my_learning') }}" class="btn btn-sm btn-outline-primary">
+                    View All My Courses
+                </a>
+            </div>
+
+            {% if recent_enrollments %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Course Title</th>
+                            <th>Category</th>
+                            <th>Enrolled Date</th>
+                            <th>Completed Lessons</th>
+                            <th>Progress</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent_enrollments %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('courses.course_details', course_id=item.enrollment.course.id) }}" class="fw-semibold text-dark text-decoration-none">
+                                    {{ item.enrollment.course.title }}
+                                </a>
+                                <small class="text-muted d-block">{{ item.enrollment.course.instructor }}</small>
+                            </td>
+                            <td><span class="badge-category">{{ item.enrollment.course.category }}</span></td>
+                            <td class="text-muted small">{{ item.enrollment.enrolled_at.strftime('%b %d, %Y') }}</td>
+                            <td>
+                                <span class="fw-semibold">{{ item.completed_lessons }}</span> / {{ item.total_lessons }}
+                            </td>
+                            <td style="min-width: 140px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1" style="height: 6px;">
+                                        <div class="progress-bar {% if item.progress_percent == 100 %}bg-success{% endif %}" role="progressbar" style="width: {{ item.progress_percent }}%;"></div>
+                                    </div>
+                                    <span class="small fw-semibold text-muted">{{ item.progress_percent }}%</span>
+                                </div>
+                            </td>
+                            <td class="text-end">
+                                {% if item.progress_percent == 100 %}
+                                <a href="{{ url_for('student.view_certificate', enrollment_id=item.enrollment.id) }}" class="btn btn-sm btn-success">
+                                    <i class="bi bi-award-fill me-1"></i> Certificate
+                                </a>
+                                {% else %}
+                                <a href="{{ url_for('student.my_learning') }}" class="btn btn-sm btn-outline-primary">
+                                    Continue <i class="bi bi-arrow-right ms-1"></i>
+                                </a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <div class="stat-icon stat-blue mx-auto mb-3">
+                    <i class="bi bi-journal-plus fs-3"></i>
+                </div>
+                <h5 class="fw-bold">You have not enrolled in any courses yet</h5>
+                <p class="text-muted small">Explore our curated catalog and start your learning journey today.</p>
+                <a href="{{ url_for('courses.list_courses') }}" class="btn btn-primary mt-2">
+                    <i class="bi bi-search me-1"></i> Browse Course Catalog
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

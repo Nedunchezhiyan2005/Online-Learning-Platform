@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+
+{% block title %}Profile Settings | Centralized Online Learning Platform{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-heading">Learning Menu</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link" href="{{ url_for('student.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Dashboard Overview
+            </a>
+            <a class="nav-link" href="{{ url_for('student.my_learning') }}">
+                <i class="bi bi-journal-bookmark"></i> My Enrolled Courses
+            </a>
+            <a class="nav-link" href="{{ url_for('courses.list_courses') }}">
+                <i class="bi bi-compass"></i> Explore Course Catalog
+            </a>
+        </nav>
+
+        <div class="sidebar-heading">Account</div>
+        <nav class="nav flex-column sidebar-nav">
+            <a class="nav-link active" href="{{ url_for('student.profile') }}">
+                <i class="bi bi-person-gear"></i> Profile & Security
+            </a>
+            <a class="nav-link text-danger" href="{{ url_for('auth.logout') }}">
+                <i class="bi bi-box-arrow-right"></i> Sign Out
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Content -->
+    <section class="dashboard-content">
+        <div class="mb-4">
+            <h2 class="fw-bold text-dark mb-1">Student Profile & Security</h2>
+            <p class="text-muted">Manage your personal information and update your login password.</p>
+        </div>
+
+        <div class="row g-4">
+            <!-- Account Overview & Basic Details -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-person-badge me-2 text-primary"></i>Personal Information</h5>
+
+                    <form method="POST" action="{{ url_for('student.profile') }}">
+                        {{ profile_form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Email Address (Read-only)</label>
+                            <input type="email" class="form-control bg-light" value="{{ user.email }}" readonly disabled>
+                            <small class="text-muted">Account email is tied to student registration records.</small>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Assigned System Role</label>
+                            <div>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle p-2 px-3 fw-bold">
+                                    {{ user.role|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ profile_form.full_name.id }}" class="form-label small fw-semibold">Full Name</label>
+                            {{ profile_form.full_name(class="form-control" + (" is-invalid" if profile_form.full_name.errors else "")) }}
+                            {% for err in profile_form.full_name.errors %}
+                                <div class="invalid-feedback">{{ err }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold text-muted">Account Created On</label>
+                            <p class="text-dark small mb-0">{{ user.created_at.strftime('%B %d, %Y at %H:%M UTC') }}</p>
+                        </div>
+
+                        <button type="submit" name="profile-submit" class="btn btn-primary">
+                            <i class="bi bi-check2 me-1"></i> Update Profile Name
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Password Change Card -->
+            <div class="col-lg-6">
+                <div class="card border-0 shadow-sm p-4 bg-white">
+                    <h5 class="fw-bold text-dark mb-3"><i class="bi bi-key me-2 text-primary"></i>Change Password</h5>
+
+                    <form method="POST" action="{{ url_for('student.profile') }}">
+                        {{ password_form.hidden_tag() }}
+
+                        <div class="mb-3">
+                            <label for="{{ password_form.current_password.id }}" class="form-label small fw-semibold">Current Password</label>
+                            {{ password_form.current_password(class="form-control" + (" is-invalid" if password_form.current_password.errors else "")) }}
+                            {% for err in password_form.current_password.errors %}
+                                <div class="invalid-feedback">{{ err }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ password_form.new_password.id }}" class="form-label small fw-semibold">New Password</label>
+                            {{ password_form.new_password(class="form-control" + (" is-invalid" if password_form.new_password.errors else "")) }}
+                            {% for err in password_form.new_password.errors %}
+                                <div class="invalid-feedback">{{ err }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="{{ password_form.confirm_new_password.id }}" class="form-label small fw-semibold">Confirm New Password</label>
+                            {{ password_form.confirm_new_password(class="form-control" + (" is-invalid" if password_form.confirm_new_password.errors else "")) }}
+                            {% for err in password_form.confirm_new_password.errors %}
+                                <div class="invalid-feedback">{{ err }}</div>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" name="password-submit" class="btn btn-outline-primary">
+                            <i class="bi bi-shield-lock me-1"></i> Change Password
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

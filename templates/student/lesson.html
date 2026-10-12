@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}{{ lesson.title }} | {{ course.title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-lg-5 py-4">
+    <!-- Breadcrumb & Top Bar -->
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0 small">
+                <li class="breadcrumb-item"><a href="{{ url_for('student.my_learning') }}" class="text-decoration-none">My Learning</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('courses.course_details', course_id=course.id) }}" class="text-decoration-none">{{ course.title }}</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Lesson #{{ lesson.lesson_order }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex align-items-center gap-2">
+            <span class="small text-muted fw-semibold">Course Progress:</span>
+            <div class="progress" style="width: 140px; height: 8px;">
+                <div class="progress-bar {% if progress_percent == 100 %}bg-success{% endif %}" role="progressbar" style="width: {{ progress_percent }}%;"></div>
+            </div>
+            <span class="small fw-bold">{{ done_count }}/{{ total_count }} ({{ progress_percent }}%)</span>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Main Lesson Content Area -->
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm p-4 p-md-5 mb-4 bg-white">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div>
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle mb-2">
+                            Unit {{ lesson.lesson_order }} of {{ total_count }}
+                        </span>
+                        <h2 class="fw-bold text-dark">{{ lesson.title }}</h2>
+                    </div>
+
+                    <!-- Mark as completed toggle button -->
+                    <form method="POST" action="{{ url_for('student.toggle_progress', course_id=course.id, lesson_id=lesson.id) }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                        {% if is_completed %}
+                            <button type="submit" class="btn btn-success d-flex align-items-center gap-2">
+                                <i class="bi bi-check-circle-fill"></i> Completed
+                            </button>
+                        {% else %}
+                            <button type="submit" class="btn btn-outline-primary d-flex align-items-center gap-2">
+                                <i class="bi bi-circle"></i> Mark as Completed
+                            </button>
+                        {% endif %}
+                    </form>
+                </div>
+
+                <hr class="mb-4">
+
+                <!-- Lesson Content Body -->
+                <div class="lesson-content-area mb-5">
+                    {% for paragraph in lesson.content.split('\n\n') %}
+                        <p>{{ paragraph|replace('\n', '<br>')|safe }}</p>
+                    {% endfor %}
+                </div>
+
+                <!-- External Resource Reference -->
+                {% if lesson.resource_url %}
+                <div class="p-3 bg-light rounded-3 border d-flex align-items-center justify-content-between mb-4">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-link-45deg fs-4 text-primary"></i>
+                        <div>
+                            <span class="small fw-semibold d-block text-dark">Supplementary Documentation</span>
+                            <span class="text-muted small">Explore full guides and official references</span>
+                        </div>
+                    </div>
+                    <a href="{{ lesson.resource_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-primary">
+                        Open Resource <i class="bi bi-box-arrow-up-right ms-1"></i>
+                    </a>
+                </div>
+                {% endif %}
+
+                <!-- Bottom Navigation Buttons -->
+                <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                    {% if prev_lesson %}
+                    <a href="{{ url_for('student.view_lesson', course_id=course.id, lesson_id=prev_lesson.id) }}" class="btn btn-outline-secondary">
+                        <i class="bi bi-arrow-left me-1"></i> Previous Lesson
+                    </a>
+                    {% else %}
+                    <button class="btn btn-outline-secondary" disabled>
+                        <i class="bi bi-arrow-left me-1"></i> Previous Lesson
+                    </button>
+                    {% endif %}
+
+                    {% if next_lesson %}
+                    <a href="{{ url_for('student.view_lesson', course_id=course.id, lesson_id=next_lesson.id) }}" class="btn btn-primary">
+                        Next Lesson <i class="bi bi-arrow-right ms-1"></i>
+                    </a>
+                    {% else %}
+                    <a href="{{ url_for('student.my_learning') }}" class="btn btn-success">
+                        Finish Course <i class="bi bi-check2-circle ms-1"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Curriculum Navigation Sidebar -->
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm p-4 bg-white sticky-top" style="top: 80px;">
+                <h5 class="fw-bold text-dark mb-3"><i class="bi bi-list-task me-2 text-primary"></i>Course Outline</h5>
+                <div class="list-group list-group-flush small">
+                    {% for item in all_lessons %}
+                    <a href="{{ url_for('student.view_lesson', course_id=course.id, lesson_id=item.id) }}" 
+                       class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 border-bottom {% if item.id == lesson.id %}bg-primary-subtle border-primary text-primary fw-bold{% endif %}">
+                        <div class="d-flex align-items-center gap-2">
+                            {% if item.id in completed_ids %}
+                                <i class="bi bi-check-circle-fill text-success fs-6"></i>
+                            {% else %}
+                                <i class="bi bi-circle text-muted fs-6"></i>
+                            {% endif %}
+                            <span>{{ item.lesson_order }}. {{ item.title }}</span>
+                        </div>
+                        {% if item.id == lesson.id %}
+                        <span class="badge bg-primary text-white">Current</span>
+                        {% endif %}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Centralized Online Learning Platform{% endblock %}</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm py-2">
+        <div class="container-fluid px-lg-5">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="{{ url_for('index') }}">
+                <i class="bi bi-mortarboard-fill fs-3 text-primary"></i>
+                <span>EduCentral<span class="text-primary">Platform</span></span>
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain" aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarMain">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-4">
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'index' %}active{% endif %}" href="{{ url_for('index') }}">
+                            <i class="bi bi-house-door me-1"></i> Home
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'courses.list_courses' %}active{% endif %}" href="{{ url_for('courses.list_courses') }}">
+                            <i class="bi bi-grid-3x3-gap me-1"></i> Browse Courses
+                        </a>
+                    </li>
+                    {% if session.get('user_role') == 'student' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'student.dashboard' %}active{% endif %}" href="{{ url_for('student.dashboard') }}">
+                            <i class="bi bi-speedometer2 me-1"></i> Student Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint == 'student.my_learning' %}active{% endif %}" href="{{ url_for('student.my_learning') }}">
+                            <i class="bi bi-journal-bookmark me-1"></i> My Learning
+                        </a>
+                    </li>
+                    {% elif session.get('user_role') == 'admin' %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if 'admin.' in request.endpoint %}active{% endif %}" href="{{ url_for('admin.dashboard') }}">
+                            <i class="bi bi-shield-lock me-1"></i> Admin Console
+                        </a>
+                    </li>
+                    {% endif %}
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    {% if session.get('user_id') %}
+                    <div class="dropdown">
+                        <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2 border" type="button" id="userMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="badge {% if session.get('user_role') == 'admin' %}bg-danger{% else %}bg-primary{% endif %} rounded-pill">
+                                {{ session.get('user_role')|capitalize }}
+                            </span>
+                            <span class="fw-semibold text-dark">{{ session.get('user_name') }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="userMenuButton">
+                            <li class="px-3 py-1 text-muted small border-bottom mb-1">
+                                <i class="bi bi-envelope me-1"></i> {{ session.get('user_email') }}
+                            </li>
+                            {% if session.get('user_role') == 'student' %}
+                            <li><a class="dropdown-item" href="{{ url_for('student.dashboard') }}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('student.my_learning') }}"><i class="bi bi-book me-2"></i>My Learning</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('student.profile') }}"><i class="bi bi-person-gear me-2"></i>Profile Settings</a></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin.dashboard') }}"><i class="bi bi-speedometer me-2"></i>Admin Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.list_courses') }}"><i class="bi bi-collection me-2"></i>Manage Courses</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.list_students') }}"><i class="bi bi-people me-2"></i>Manage Students</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin.list_enrollments') }}"><i class="bi bi-file-earmark-bar-graph me-2"></i>Enrollment Reports</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item text-danger" href="{{ url_for('auth.logout') }}">
+                                    <i class="bi bi-box-arrow-right me-2"></i> Sign Out
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Sign In
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">
+                        <i class="bi bi-person-plus me-1"></i> Register as Student
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages Container -->
+    <div class="container mt-3">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show shadow-sm" role="alert">
+                        <i class="bi {% if category == 'success' %}bi-check-circle-fill{% elif category == 'danger' %}bi-exclamation-triangle-fill{% elif category == 'warning' %}bi-exclamation-circle-fill{% else %}bi-info-circle-fill{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content Block -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Footer -->
+    <footer class="mt-5">
+        <div class="container">
+            <div class="row g-4 mb-4">
+                <div class="col-lg-4 col-md-6">
+                    <h5 class="text-white fw-bold mb-3 d-flex align-items-center gap-2">
+                        <i class="bi bi-mortarboard-fill text-primary"></i>
+                        EduCentral Platform
+                    </h5>
+                    <p class="small text-secondary">
+                        A modern, centralized online learning platform delivering continuous engineering, cloud infrastructure, and technical skill mastery.
+                    </p>
+                    <div class="d-flex gap-3 text-secondary">
+                        <span class="badge bg-secondary">Python Flask</span>
+                        <span class="badge bg-secondary">SQLite</span>
+                        <span class="badge bg-secondary">Bootstrap 5</span>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <h6 class="text-white fw-semibold mb-3">Quick Navigation</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="{{ url_for('index') }}">Home Page</a></li>
+                        <li class="mb-2"><a href="{{ url_for('courses.list_courses') }}">Course Catalog</a></li>
+                        <li class="mb-2"><a href="{{ url_for('auth.register') }}">Student Registration</a></li>
+                        <li class="mb-2"><a href="{{ url_for('auth.login') }}">Account Login</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-semibold mb-3">Curriculum Focus</h6>
+                    <ul class="list-unstyled small">
+                        <li class="mb-2"><a href="{{ url_for('courses.list_courses', category='Cloud & DevOps') }}">Cloud & DevOps CI/CD</a></li>
+                        <li class="mb-2"><a href="{{ url_for('courses.list_courses', category='Web Development') }}">Full-Stack Web Systems</a></li>
+                        <li class="mb-2"><a href="{{ url_for('courses.list_courses', category='Cybersecurity') }}">Security & Governance</a></li>
+                        <li class="mb-2"><a href="{{ url_for('courses.list_courses', category='Data Science & AI') }}">Data Science & AI</a></li>
+                    </ul>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <h6 class="text-white fw-semibold mb-3">Project & Support</h6>
+                    <p class="small mb-2 text-secondary"><i class="bi bi-envelope me-2"></i>support@learningplatform.edu</p>
+                    <p class="small mb-2 text-secondary"><i class="bi bi-building me-2"></i>Academic DevOps Project Showcase</p>
+                    <p class="small text-secondary"><i class="bi bi-shield-check me-2"></i>Role-Based Secure Architecture</p>
+                </div>
+            </div>
+            <div class="border-top border-secondary pt-3 text-center small text-secondary">
+                <p class="mb-0">&copy; {{ current_year }} Centralized Online Learning Platform. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <!-- Custom Main JS -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>

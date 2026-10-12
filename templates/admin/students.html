@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Students | Admin Console{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="dashboard-sidebar">
+        <div class="sidebar-heading">Management Console</div>
+        <nav class="nav flex-column sidebar-nav mb-4">
+            <a class="nav-link" href="{{ url_for('admin.dashboard') }}">
+                <i class="bi bi-speedometer2"></i> Admin Dashboard
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_courses') }}">
+                <i class="bi bi-collection"></i> Manage Courses
+            </a>
+            <a class="nav-link active" href="{{ url_for('admin.list_students') }}">
+                <i class="bi bi-people"></i> Registered Students
+            </a>
+            <a class="nav-link" href="{{ url_for('admin.list_enrollments') }}">
+                <i class="bi bi-file-earmark-bar-graph"></i> Enrollment Reports
+            </a>
+        </nav>
+    </aside>
+
+    <!-- Content -->
+    <section class="dashboard-content">
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold text-dark mb-1">Student Directory & Governance</h2>
+                <p class="text-muted mb-0">View registered learners, check enrollment volume, and manage account statuses.</p>
+            </div>
+        </div>
+
+        <!-- Filter and Search -->
+        <div class="card border-0 shadow-sm p-3 mb-4 bg-white">
+            <form action="{{ url_for('admin.list_students') }}" method="GET" class="row g-2 align-items-center">
+                <div class="col-md-7">
+                    <div class="input-group">
+                        <span class="input-group-text bg-light border-end-0"><i class="bi bi-search text-muted"></i></span>
+                        <input type="text" name="q" value="{{ query_text }}" class="form-control border-start-0" placeholder="Search student by name or email address...">
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <select name="status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Active Accounts</option>
+                        <option value="inactive" {% if status_filter == 'inactive' %}selected{% endif %}>Deactivated Accounts</option>
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button type="submit" class="btn btn-outline-primary w-100">Filter</button>
+                    {% if query_text or status_filter %}
+                    <a href="{{ url_for('admin.list_students') }}" class="btn btn-outline-secondary" title="Reset">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+
+        <!-- Students Table -->
+        <div class="card border-0 shadow-sm p-4 bg-white">
+            {% if students %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Email Address</th>
+                            <th>Enrolled Courses</th>
+                            <th>Status</th>
+                            <th>Registered Date</th>
+                            <th class="text-end">Account Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for st in students %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="stat-icon stat-blue" style="width: 36px; height: 36px; font-size: 1rem;">
+                                        <i class="bi bi-person"></i>
+                                    </div>
+                                    <span class="fw-semibold text-dark">{{ st.full_name }}</span>
+                                </div>
+                            </td>
+                            <td class="text-muted small">{{ st.email }}</td>
+                            <td>
+                                <span class="badge bg-light text-primary border">
+                                    {{ st.enrollments.count() }} Courses
+                                </span>
+                            </td>
+                            <td>
+                                {% if st.is_active %}
+                                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                    <i class="bi bi-check-circle me-1"></i> Active
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                    <i class="bi bi-dash-circle me-1"></i> Deactivated
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ st.created_at.strftime('%b %d, %Y') }}</td>
+                            <td class="text-end">
+                                <form method="POST" action="{{ url_for('admin.toggle_student_status', student_id=st.id) }}" class="d-inline">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                                    {% if st.is_active %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Deactivate account" onclick="return confirm('Deactivate student account for {{ st.full_name }}?');">
+                                        <i class="bi bi-person-x me-1"></i> Deactivate
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-sm btn-outline-success" title="Reactivate account" onclick="return confirm('Reactivate student account for {{ st.full_name }}?');">
+                                        <i class="bi bi-person-check me-1"></i> Reactivate
+                                    </button>
+                                    {% endif %}
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-people fs-1 text-muted d-block mb-3"></i>
+                <h5 class="fw-bold">No students found</h5>
+                <p class="text-muted small">No student records match the search filters.</p>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}
